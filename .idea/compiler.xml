@@ -16,9 +16,9 @@
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/unknown/lombok-unknown.jar" />
         </processorPath>
         <module name="product-service" />
-        <module name="order-service" />
         <module name="inventory-service" />
         <module name="discovery-server" />
+        <module name="order-service" />
       </profile>
     </annotationProcessing>
   </component>

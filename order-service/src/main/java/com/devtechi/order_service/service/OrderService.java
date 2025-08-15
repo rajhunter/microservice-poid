@@ -23,7 +23,7 @@ public class OrderService {
     private static final Logger log = LoggerFactory.getLogger(OrderService.class);
 
     private  final  OrderRepository orderRepository;
-private final WebClient webClient;
+private final WebClient.Builder webClientBuilder;
 
     public void  createOrder(OrderRequest orderRequest)  {
         Order order = new Order();
@@ -62,8 +62,8 @@ private final WebClient webClient;
                 .bodyToMono(InventoryResponse[].class)
                 .block();
         */
-        InventoryResponse[] inventoryResponseArray = webClient.get()
-                .uri("http://localhost:8082/api/inventory/getInventoryOrderList", uriBuilder -> {
+        InventoryResponse[] inventoryResponseArray = webClientBuilder.build().get()
+                .uri("http://inventory-service/api/inventory/getInventoryOrderList", uriBuilder -> {
                     uriBuilder.queryParam("skuCode", skuCodes);
                     String finalUri = uriBuilder.build().toString();
                     log.info("Calling Inventory Service with URI: {}", finalUri);

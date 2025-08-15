@@ -1,0 +1,7 @@
+/Users/raj/Documents/dev-2025/microservice-ps/product-service/src/main/java/com/devtechi/product_service/ProductServiceApplication.java
+/Users/raj/Documents/dev-2025/microservice-ps/product-service/src/main/java/com/devtechi/product_service/controller/ProductController.java
+/Users/raj/Documents/dev-2025/microservice-ps/product-service/src/main/java/com/devtechi/product_service/dto/ProductRequest.java
+/Users/raj/Documents/dev-2025/microservice-ps/product-service/src/main/java/com/devtechi/product_service/dto/ProductResponse.java
+/Users/raj/Documents/dev-2025/microservice-ps/product-service/src/main/java/com/devtechi/product_service/model/Product.java
+/Users/raj/Documents/dev-2025/microservice-ps/product-service/src/main/java/com/devtechi/product_service/repository/ProductRepository.java
+/Users/raj/Documents/dev-2025/microservice-ps/product-service/src/main/java/com/devtechi/product_service/service/ProductService.java

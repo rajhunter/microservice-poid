@@ -1,0 +1,7 @@
+com/devtechi/inventory_service/InventoryController/InventoryController.class
+com/devtechi/inventory_service/dto/InventoryResponse$InventoryResponseBuilder.class
+com/devtechi/inventory_service/dto/InventoryResponse.class
+com/devtechi/inventory_service/inventoryService/InventoryService.class
+com/devtechi/inventory_service/repository/InventoryRepository.class
+com/devtechi/inventory_service/InventoryServiceApplication.class
+com/devtechi/inventory_service/model/Inventory.class

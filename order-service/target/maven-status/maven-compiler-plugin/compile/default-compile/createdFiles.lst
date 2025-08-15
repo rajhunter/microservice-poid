@@ -1,0 +1,11 @@
+com/devtechi/order_service/dto/OrderRequest.class
+com/devtechi/order_service/dto/OrderLineItemsDto.class
+com/devtechi/order_service/config/WebClientConfig.class
+com/devtechi/order_service/controller/OrderController.class
+com/devtechi/order_service/model/Order.class
+com/devtechi/order_service/dto/InventoryResponse.class
+com/devtechi/order_service/model/OrderLineItems.class
+com/devtechi/order_service/dto/InventoryResponse$InventoryResponseBuilder.class
+com/devtechi/order_service/repository/OrderRepository.class
+com/devtechi/order_service/service/OrderService.class
+com/devtechi/order_service/OrderServiceApplication.class

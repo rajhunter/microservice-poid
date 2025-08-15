@@ -1,0 +1,10 @@
+com/devtechi/product_service/dto/ProductResponse.class
+com/devtechi/product_service/model/Product.class
+com/devtechi/product_service/service/ProductService.class
+com/devtechi/product_service/model/Product$ProductBuilder.class
+com/devtechi/product_service/repository/ProductRepository.class
+com/devtechi/product_service/dto/ProductResponse$ProductResponseBuilder.class
+com/devtechi/product_service/controller/ProductController.class
+com/devtechi/product_service/dto/ProductRequest.class
+com/devtechi/product_service/dto/ProductRequest$ProductRequestBuilder.class
+com/devtechi/product_service/ProductServiceApplication.class

@@ -18,8 +18,8 @@
         <module name="api-gateway" />
         <module name="product-service" />
         <module name="order-service" />
-        <module name="discovery-server" />
         <module name="inventory-service" />
+        <module name="discovery-server" />
       </profile>
     </annotationProcessing>
   </component>
@@ -28,7 +28,7 @@
       <module name="api-gateway" options="-parameters" />
       <module name="discovery-server" options="-parameters" />
       <module name="inventory-service" options="-parameters" />
-      <module name="microservice-ps" options="" />
+      <module name="microservice-ps" options="-parameters" />
       <module name="order-service" options="-parameters" />
       <module name="product-service" options="-parameters" />
     </option>

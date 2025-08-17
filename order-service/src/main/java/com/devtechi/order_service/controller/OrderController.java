@@ -4,6 +4,8 @@ import com.devtechi.order_service.dto.OrderRequest;
 import com.devtechi.order_service.model.Order;
 import com.devtechi.order_service.service.OrderService;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
+import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +15,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 @RestController
 @RequestMapping("/api/order")
@@ -35,19 +38,56 @@ public class OrderController {
     @PostMapping("/placeOrder")
     @ResponseStatus(HttpStatus.OK)
     @CircuitBreaker(name = "inventory",fallbackMethod = "fallbackMethod")
-    public String placeOrder(@RequestBody OrderRequest orderRequest) throws IllegalAccessException {
+    @TimeLimiter(name="inventory")
+    @Retry(name="inventory")
+    public CompletableFuture <String> placeOrder(@RequestBody OrderRequest orderRequest) throws Exception {
         System.out.println("Incoming OrderRequest: " + orderRequest); // prints using toString()
-
-        orderService.placeOrder(orderRequest);
-        return "Order successfully places ";
+        return CompletableFuture.supplyAsync(()-> {
+            try {
+                return orderService.placeOrder(orderRequest);
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException(e);
+            }
+        });
+        //return "Order successfully places ";
     }
 
     @GetMapping("/getAllOrder")
-    @CircuitBreaker(name = "inventory",fallbackMethod = "fallbackMethodGetAll")
-    public List<Order> getAll(){
+    public List<Order> getAllOrder(){
         return orderService.getAllProduct();
     }
 
+//    @GetMapping("/getAllOrderAsync")
+//    @TimeLimiter(name="inventory")
+//    @CircuitBreaker(name = "inventory", fallbackMethod = "fallbackMethodGetAllAsync")
+//    public CompletableFuture<List<Order>> getAll() {
+//        return CompletableFuture.supplyAsync(() -> {
+//            // explicitly force initialization while session is open
+//            List<Order> orders = orderService.getAllProduct();
+//            orders.forEach(order -> {
+//                System.out.println("Order: " + order.getId() + " items = " + order.getOrderLineItems().size());
+//            });
+//            orders.forEach(o -> o.getOrderLineItems().size()); // triggers lazy load
+//            return orders;
+//        });
+//    }
+
+
+    // Note this snippet is not working
+    @TimeLimiter(name="inventory")
+    @CircuitBreaker(name = "inventory", fallbackMethod = "fallbackMethodGetAllAsync")
+    @GetMapping("/getAllOrderAsync")
+    public CompletableFuture<List<Order>> getAllOrderAsyc() {
+        return CompletableFuture.supplyAsync(() -> orderService.getAllOrders());
+    }
+
+    public CompletableFuture<List<Order>> fallbackMethodGetAllAsync(Throwable ex) {
+        Order fallbackOrder = new Order();
+        fallbackOrder.setId(-1L);
+        fallbackOrder.setOrderNumber("⚠️ Service unavailable. Please try again later.");
+
+        return CompletableFuture.completedFuture(List.of(fallbackOrder));
+    }
     @GetMapping("/getProductById/{id}")
     public Optional<Order> getProductById(@PathVariable Long id){
         return orderService.getProductById(id);
@@ -79,13 +119,7 @@ public class OrderController {
 
     }
 
-    public List<Order> fallbackMethodGetAll(RuntimeException ex) {
-        // return an empty list or default response
-        Order fallbackOrder = new Order();
-        fallbackOrder.setId(-1L); // special id
-        fallbackOrder.setOrderNumber("⚠️ Service unavailable. Please try again later.");
-        return List.of(fallbackOrder);
-    }
+
 
     public ResponseEntity<?> fallbackMethodGetProductById(Long id, Throwable ex) {
         return ResponseEntity.ok(

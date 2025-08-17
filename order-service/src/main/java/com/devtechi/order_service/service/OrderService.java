@@ -9,6 +9,7 @@ import com.devtechi.order_service.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -16,6 +17,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 @RequiredArgsConstructor
@@ -37,7 +39,7 @@ private final WebClient.Builder webClientBuilder;
 
     }
 
-    public void  placeOrder(OrderRequest orderRequest) throws IllegalAccessException {
+    public String placeOrder(OrderRequest orderRequest) throws IllegalAccessException {
         Order order = new Order();
         order.setOrderNumber(UUID.randomUUID().toString());
         List<OrderLineItems> orderLineItemsList =  orderRequest.getOrderLineItemsDtoList()
@@ -85,6 +87,8 @@ private final WebClient.Builder webClientBuilder;
                 .allMatch(InventoryResponse::isInStock);
         if(allProductInStock){
         orderRepository.save(order);
+            return " Order Place successfully";
+
         }else {
             throw new IllegalAccessException ("Product is not available Plea try latter !");
         }
@@ -104,7 +108,19 @@ return orderLineItems;
     public List<Order> getAllProduct() {
         return orderRepository.findAll();
 
+
+
     }
+    // Note this snippet is not working
+    public List<Order> getAllOrders() {
+        return orderRepository.findAll().stream()
+                .map(order -> new Order(order.getId(), order.getOrderNumber(),
+                        order.getOrderLineItems().stream()
+                                .map(li -> new OrderLineItems(li.getId(), li.getSkuCode(), li.getPrice(), li.getQuantity()))
+                                .toList()))
+                .toList();
+    }
+
     public Optional<Order> getProductById(Long id) {
         return orderRepository.findById(id);
     }

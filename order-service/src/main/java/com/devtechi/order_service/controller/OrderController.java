@@ -37,20 +37,37 @@ public class OrderController {
 
     @PostMapping("/placeOrder")
     @ResponseStatus(HttpStatus.OK)
-    @CircuitBreaker(name = "inventory",fallbackMethod = "fallbackMethod")
-    @TimeLimiter(name="inventory")
-    @Retry(name="inventory")
-    public CompletableFuture <String> placeOrder(@RequestBody OrderRequest orderRequest) throws Exception {
+//    @CircuitBreaker(name = "inventory",fallbackMethod = "fallbackMethod")
+//    @TimeLimiter(name="inventory")
+//    @Retry(name="inventory")
+    public String placeOrder(@RequestBody OrderRequest orderRequest) throws Exception {
         System.out.println("Incoming OrderRequest: " + orderRequest); // prints using toString()
-        return CompletableFuture.supplyAsync(()-> {
-            try {
-                return orderService.placeOrder(orderRequest);
-            } catch (IllegalAccessException e) {
-                throw new RuntimeException(e);
-            }
-        });
-        //return "Order successfully places ";
+        try {
+            return orderService.placeOrder(orderRequest);
+
+        }catch (Exception e){
+            return "Order failed places "+e;
+
+        }
+
     }
+
+//    @PostMapping("/placeOrder")
+//    @ResponseStatus(HttpStatus.OK)
+//    @CircuitBreaker(name = "inventory",fallbackMethod = "fallbackMethod")
+//    @TimeLimiter(name="inventory")
+//    @Retry(name="inventory")
+//    public CompletableFuture <String> placeOrder(@RequestBody OrderRequest orderRequest) throws Exception {
+//        System.out.println("Incoming OrderRequest: " + orderRequest); // prints using toString()
+//        return CompletableFuture.supplyAsync(()-> {
+//            try {
+//                return orderService.placeOrder(orderRequest);
+//            } catch (IllegalAccessException e) {
+//                throw new RuntimeException(e);
+//            }
+//        });
+//        //return "Order successfully places ";
+//    }
 
     @GetMapping("/getAllOrder")
     public List<Order> getAllOrder(){

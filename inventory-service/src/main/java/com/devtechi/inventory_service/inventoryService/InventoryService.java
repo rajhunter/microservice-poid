@@ -30,7 +30,7 @@ public class InventoryService {
     @SneakyThrows // it is not recommended in Production
     public List<InventoryResponse> inStockInList(List<String> skuCode) {
        log.info("Inventory Start");
-       Thread.sleep(10000);
+      // Thread.sleep(10000);
         log.info("Inventory End");
 
         return inventoryRepository.findBySkuCodeIn(skuCode)

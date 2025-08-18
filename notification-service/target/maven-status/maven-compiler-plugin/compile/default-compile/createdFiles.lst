@@ -1,0 +1,4 @@
+com/devtechi/dev/service/EmailService.class
+com/devtechi/dev/config/EmailConfig.class
+com/devtechi/dev/NotificationServiceApplication.class
+com/devtechi/dev/model/OrderPlaceEvent.class

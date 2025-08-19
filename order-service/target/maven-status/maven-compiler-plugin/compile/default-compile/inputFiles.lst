@@ -4,6 +4,7 @@
 /Users/raj/Documents/dev-2025/microservice-ps/order-service/src/main/java/com/devtechi/order_service/dto/InventoryResponse.java
 /Users/raj/Documents/dev-2025/microservice-ps/order-service/src/main/java/com/devtechi/order_service/dto/OrderLineItemsDto.java
 /Users/raj/Documents/dev-2025/microservice-ps/order-service/src/main/java/com/devtechi/order_service/dto/OrderRequest.java
+/Users/raj/Documents/dev-2025/microservice-ps/order-service/src/main/java/com/devtechi/order_service/event/OrderPlaceEvent.java
 /Users/raj/Documents/dev-2025/microservice-ps/order-service/src/main/java/com/devtechi/order_service/model/Order.java
 /Users/raj/Documents/dev-2025/microservice-ps/order-service/src/main/java/com/devtechi/order_service/model/OrderLineItems.java
 /Users/raj/Documents/dev-2025/microservice-ps/order-service/src/main/java/com/devtechi/order_service/repository/OrderRepository.java

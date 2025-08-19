@@ -3,6 +3,7 @@ package com.devtechi.order_service.service;
 import com.devtechi.order_service.dto.InventoryResponse;
 import com.devtechi.order_service.dto.OrderLineItemsDto;
 import com.devtechi.order_service.dto.OrderRequest;
+import com.devtechi.order_service.event.OrderPlaceEvent;
 import com.devtechi.order_service.model.Order;
 import com.devtechi.order_service.model.OrderLineItems;
 import com.devtechi.order_service.repository.OrderRepository;
@@ -14,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -29,10 +31,12 @@ public class OrderService {
     private static final Logger log = LoggerFactory.getLogger(OrderService.class);
 
     private  final  OrderRepository orderRepository;
-private final WebClient.Builder webClientBuilder;
+    private final WebClient.Builder webClientBuilder;
 
     private final ObservationRegistry observationRegistry;
-private final Tracer tracer;
+    private final Tracer tracer;
+
+    private final KafkaTemplate<String, OrderPlaceEvent> kafkaTemplate;
     public void  createOrder(OrderRequest orderRequest)  {
         Order order = new Order();
         order.setOrderNumber(UUID.randomUUID().toString());
@@ -42,6 +46,7 @@ private final Tracer tracer;
         //  .map(orderLineItemsDto -> mapToDTO(orderLineItemsDto)).collect(Collectors.toList());
         order.setOrderLineItems(orderLineItemsList);
         orderRepository.save(order);
+        kafkaTemplate.send("notificationTopic", new OrderPlaceEvent(order.getOrderNumber()));
 
     }
 
@@ -49,6 +54,8 @@ private final Tracer tracer;
 
 
     public String placeOrder(OrderRequest orderRequest) throws IllegalAccessException {
+        log.info("placeOrder service started--------- ");
+
         Order order = new Order();
         order.setOrderNumber(UUID.randomUUID().toString());
 
@@ -69,7 +76,9 @@ private final Tracer tracer;
                     InventoryResponse[] inventoryResponseArray = webClientBuilder.build()
                             .get()
                             .uri(uriBuilder -> uriBuilder
-                                    .path("/api/inventory/getInventoryOrderList")
+                                    .scheme("http")                 // ✅ specify scheme
+                                    .host("inventory-service")      // ✅ host without http
+                                    .path("/api/inventory/getInventoryOrderList")  // ✅ path
                                     .queryParam("skuCode", skuCodes.toArray())
                                     .build())
                             .retrieve()
@@ -81,6 +90,7 @@ private final Tracer tracer;
 
                     if (allProductInStock) {
                         orderRepository.save(order);
+                        kafkaTemplate.send("notificationTopic", new OrderPlaceEvent(order.getOrderNumber()));
                         return "Order placed successfully";
                     } else {
                         try {
@@ -98,12 +108,12 @@ private final Tracer tracer;
         order.setOrderNumber(UUID.randomUUID().toString());
         List<OrderLineItems> orderLineItemsList =  orderRequest.getOrderLineItemsDtoList()
                 .stream()
-                        .map(this::mapToDTO).toList();
-              //  .map(orderLineItemsDto -> mapToDTO(orderLineItemsDto)).collect(Collectors.toList());
+                .map(this::mapToDTO).toList();
+        //  .map(orderLineItemsDto -> mapToDTO(orderLineItemsDto)).collect(Collectors.toList());
 //http://localhost:8082/api/inventory/getAllInventory
         order.setOrderLineItems(orderLineItemsList);
 
-       // order.getOrderLineItems().stream().map(orderLineItems -> orderLineItems.getSkuCode()).toList();
+        // order.getOrderLineItems().stream().map(orderLineItems -> orderLineItems.getSkuCode()).toList();
         List<String> skuCodes = order.getOrderLineItems()
                 .stream()
                 .map(OrderLineItems::getSkuCode)
@@ -119,41 +129,41 @@ private final Tracer tracer;
                 .block();
         */
 
-     Span inventoryServiceSpan =  tracer.nextSpan().name("inventoryServiceSpan");
-    try (Tracer.SpanInScope spanInScope=tracer.withSpan(inventoryServiceSpan.start())){
+        Span inventoryServiceSpan =  tracer.nextSpan().name("inventoryServiceSpan");
+        try (Tracer.SpanInScope spanInScope=tracer.withSpan(inventoryServiceSpan.start())){
 
 
-        InventoryResponse[] inventoryResponseArray = webClientBuilder.build().get()
-                .uri("http://inventory-service/api/inventory/getInventoryOrderList", uriBuilder -> {
-                    uriBuilder.queryParam("skuCode", skuCodes);
-                    String finalUri = uriBuilder.build().toString();
-                    log.info("Calling Inventory Service with URI: {}", finalUri);
-                    return uriBuilder.build();
-                })
-                .retrieve()
-                .bodyToMono(InventoryResponse[].class)
-                .block();
+            InventoryResponse[] inventoryResponseArray = webClientBuilder.build().get()
+                    .uri("http://inventory-service/api/inventory/getInventoryOrderList", uriBuilder -> {
+                        uriBuilder.queryParam("skuCode", skuCodes);
+                        String finalUri = uriBuilder.build().toString();
+                        log.info("Calling Inventory Service with URI: {}", finalUri);
+                        return uriBuilder.build();
+                    })
+                    .retrieve()
+                    .bodyToMono(InventoryResponse[].class)
+                    .block();
 
-        log.info("order service inventoryResponseArray length: {}",
-                inventoryResponseArray != null ? inventoryResponseArray.length : 0);
-        assert inventoryResponseArray != null;
-        for (InventoryResponse sku : inventoryResponseArray ) {
-            System.out.println("order service inventoryResponseArray list {}"+sku.getSkuCode());
+            log.info("order service inventoryResponseArray length: {}",
+                    inventoryResponseArray != null ? inventoryResponseArray.length : 0);
+            assert inventoryResponseArray != null;
+            for (InventoryResponse sku : inventoryResponseArray ) {
+                System.out.println("order service inventoryResponseArray list {}"+sku.getSkuCode());
 
+            }
+
+            boolean allProductInStock = Arrays.stream(inventoryResponseArray)
+                    .allMatch(InventoryResponse::isInStock);
+            if(allProductInStock){
+                orderRepository.save(order);
+                return " Order Place successfully";
+
+            }else {
+                throw new IllegalAccessException ("Product is not available Plea try latter !");
+            }
+        }finally {
+            inventoryServiceSpan.end();
         }
-
-        boolean allProductInStock = Arrays.stream(inventoryResponseArray)
-                .allMatch(InventoryResponse::isInStock);
-        if(allProductInStock){
-            orderRepository.save(order);
-            return " Order Place successfully";
-
-        }else {
-            throw new IllegalAccessException ("Product is not available Plea try latter !");
-        }
-    }finally {
-        inventoryServiceSpan.end();
-    }
 
     }
 
@@ -164,7 +174,7 @@ private final Tracer tracer;
         orderLineItems.setQuantity(orderLineItemsDto.getQuantity());
         orderLineItems.setSkuCode(orderLineItemsDto.getSkuCode());
 
-return orderLineItems;
+        return orderLineItems;
 
     }
 

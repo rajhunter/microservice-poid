@@ -1,2 +1,12 @@
-package com.devtechi.order_service.event;public class orderPlaceEvent {
+package com.devtechi.order_service.event;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class OrderPlaceEvent {
+    private String orderNumber;
 }
